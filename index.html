@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>归宅 · 第一章</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=ZCOOL+XiaoWei&display=swap');
+        
+        :root {
+            --blood: #8B0000;
+            --paper: #f5f0e1;
+            --ink: #1a1a1a;
+            --gold: #b8860b;
+            --shadow: rgba(139, 0, 0, 0.3);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Serif SC', serif;
+            background: var(--paper);
+            min-height: 100vh;
+            overflow: hidden;
+            cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="8" fill="%238B0000" opacity="0.6"/></svg>') 16 16, auto;
+        }
+        
+        /* 视频背景层 */
+        .video-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .video-bg video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.3;
+            filter: sepia(0.4) contrast(0.8);
+        }
+        
+        .video-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(245, 240, 225, 0.7);
+            z-index: 1;
+        }
+        
+        .paper-texture {
+            position: fixed;
+            inset: 0;
+            background: 
+                url('data:image/svg+xml,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.08"/></svg>'),
+                linear-gradient(180deg, #f5f0e1 0%, #e8e0d0 100%);
+            pointer-events: none;
+            z-index: 2;
+        }
+        
+        .stain {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(ellipse at center, rgba(139, 69, 19, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 3;
+        }
+        
+        .stain-1 { top: 10%; left: -50px; transform: rotate(15deg); }
+        .stain-2 { bottom: 20%; right: -80px; transform: rotate(-30deg); }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        .scene {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease;
+        }
+        
+        .scene.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        #scene-title {
+            text-align: center;
+        }
+        
+        .title-char {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: clamp(4rem, 15vw, 10rem);
+            color: var(--ink);
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: charReveal 0.8s ease forwards;
+        }
+        
+        .title-char:nth-child(1) { animation-delay: 0.5s; }
+        .title-char:nth-child(2) { animation-delay: 0.7s; }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--blood);
+            margin-top: 2rem;
+            opacity: 0;
+            animation: fadeUp 1s ease 1.5s forwards;
+            letter-spacing: 0.5em;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .start-btn {
+            padding: 1rem 3rem;
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.1rem;
+            background: transparent;
+            border: 1px solid var(--blood);
+            color: var(--blood);
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeUp 1s ease 2s forwards;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .start-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--blood);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: -1;
+        }
+        
+        .start-btn:hover {
+            color: var(--paper);
+        }
+        
+        .start-btn:hover::before {
+            transform: translateX(0);
+        }
+        
+        .start-btn.video-btn {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        
+        .start-btn.video-btn::before {
+            background: var(--gold);
+        }
+        
+        .narration-box {
+            max-width: 600px;
+            padding: 2rem 3rem;
+            background: rgba(245, 240, 225, 0.95);
+            border: 1px solid rgba(139, 0, 0, 0.2);
+            box-shadow: 
+                0 0 60px rgba(139, 0, 0, 0.1),
+                inset 0 0 30px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+        
+        .narration-box::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border: 1px solid rgba(139, 0, 0, 0.1);
+            pointer-events: none;
+        }
+        
+        .narration-text {
+            font-size: 1.1rem;
+            line-height: 2;
+            color: var(--ink);
+            min-height: 100px;
+            white-space: pre-wrap;
+        }
+        
+        .narration-text .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background: var(--blood);
+            margin-left: 2px;
+            animation: blink 0.8s infinite;
+        }
+        
+        .choices {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        
+        .choices.visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.8s ease;
+        }
+        
+        .choice-btn {
+            padding: 1rem 2rem;
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1rem;
+            background: transparent;
+            border: 1px solid var(--ink);
+            color: var(--ink);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            position: relative;
+        }
+        
+        .choice-btn::before {
+            content: ' ';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 0;
+            height: 100%;
+            background: var(--blood);
+            transition: width 0.3s ease;
+            z-index: -1;
+        }
+        
+        .choice-btn:hover {
+            color: var(--paper);
+            border-color: var(--blood);
+        }
+        
+        .choice-btn:hover::before {
+            width: 100%;
+        }
+        
+        .talisman {
+            position: fixed;
+            width: 80px;
+            height: 120px;
+            background: #d4c4a8;
+            border: 1px solid var(--blood);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 1.5rem;
+            color: var(--blood);
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            z-index: 100;
+            animation: talismanFloat 3s ease-in-out infinite;
+        }
+        
+        .talisman::before {
+            content: '';
+            position: absolute;
+            inset: 5px;
+            border: 1px solid var(--blood);
+        }
+        
+        #scene-ending .narration-box {
+            border-color: var(--blood);
+            box-shadow: 
+                0 0 100px rgba(139, 0, 0, 0.3),
+                inset 0 0 50px rgba(139, 0, 0, 0.1);
+        }
+        
+        .ending-title {
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-size: 2rem;
+            color: var(--blood);
+            margin-bottom: 1rem;
+            letter-spacing: 0.3em;
+        }
+        
+        .flicker {
+            animation: flicker 4s infinite;
+        }
+        
+        .fog {
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(139, 0, 0, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 50%, rgba(0, 0, 0, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 4;
+            animation: fogDrift 20s ease-in-out infinite;
+        }
+        
+        @keyframes charReveal {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            41% { opacity: 1; }
+            42% { opacity: 0.8; }
+            43% { opacity: 1; }
+            45% { opacity: 0.9; }
+            46% { opacity: 1; }
+        }
+        
+        @keyframes fogDrift {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(20px); }
+        }
+        
+        @keyframes talismanFloat {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+        
+        .click-hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            color: var(--blood);
+            opacity: 0.6;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+        
+        .red-thread {
+            position: fixed;
+            width: 1px;
+            background: linear-gradient(180deg, transparent 0%, var(--blood) 50%, transparent 100%);
+            z-index: 3;
+            opacity: 0.3;
+        }
+        
+        /* 视频生成状态 */
+        .video-status {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.75rem;
+            color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .video-status .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--blood);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        
+        .video-status.generating .spinner {
+            display: block;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .api-status {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            font-size: 0.75rem;
+            color: rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+        
+        /* 视频设置面板 */
+        .video-settings {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(245, 240, 225, 0.98);
+            padding: 2rem;
+            border: 1px solid var(--blood);
+            box-shadow: 0 0 60px rgba(139, 0, 0, 0.2);
+            z-index: 2000;
+            max-width: 400px;
+            display: none;
+        }
+        
+        .video-settings.active {
+            display: block;
+        }
+        
+        .video-settings h3 {
+            font-family: 'ZCOOL XiaoWei', serif;
+            color: var(--blood);
+            margin-bottom: 1rem;
+        }
+        
+        .video-settings input {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--blood);
+            background: transparent;
+            font-family: 'Noto Serif SC', serif;
+        }
+        
+        .video-settings label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--ink);
+        }
+        
+        .video-settings textarea {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--blood);
+            background: transparent;
+            font-family: 'Noto Serif SC', serif;
+            resize: none;
+            height: 80px;
+        }
+        
+        .video-settings .btn-row {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .video-settings button {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            font-family: 'Noto Serif SC', serif;
+            border: 1px solid var(--blood);
+            background: transparent;
+            color: var(--blood);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .video-settings button:hover {
+            background: var(--blood);
+            color: var(--paper);
+        }
+        
+        .video-settings button.primary {
+            background: var(--blood);
+            color: var(--paper);
+        }
+        
+        .video-settings button.primary:hover {
+            background: transparent;
+            color: var(--blood);
+        }
+    </style>
+</head>
+<body>
+    <!-- 视频背景 -->
+    <div class="video-bg" id="video-bg">
+        <video id="bg-video" loop muted playsinline autoplay style="display:none;"></video>
+    </div>
+    <div class="video-overlay"></div>
+    
+    <div class="paper-texture"></div>
+    <div class="stain stain-1"></div>
+    <div class="stain stain-2"></div>
+    <div class="fog"></div>
+    
+    <div class="red-thread" style="left: 10%; top: 0; height: 100%;"></div>
+    <div class="red-thread" style="right: 10%; top: 0; height: 100%;"></div>
+    
+    <div id="game-container">
+        <div id="scene-title" class="scene active">
+            <div class="title-wrapper">
+                <span class="title-char">归</span>
+                <span class="title-char">宅</span>
+            </div>
+            <p class="subtitle">第一章 · 无声信</p>
+            <div class="btn-group">
+                <button class="start-btn" onclick="startGame()">开始游戏</button>
+                <button class="start-btn video-btn" onclick="showVideoSettings()">🎬 AI 视频模式</button>
+            </div>
+        </div>
+        
+        <div id="scene-1" class="scene">
+            <div class="narration-box">
+                <p class="narration-text"></p>
+                <div class="choices">
+                    <button class="choice-btn" onclick="makeChoice('examine')">仔细查看这封信</button>
+                    <button class="choice-btn" onclick="makeChoice('ignore')">把信放回去</button>
+                </div>
+            </div>
+            <p class="click-hint">点击继续</p>
+        </div>
+        
+        <div id="scene-2" class="scene">
+            <div class="narration-box">
+                <p class="narration-text"></p>
+                <div class="choices">
+                    <button class="choice-btn" onclick="makeChoice('upstairs')">上楼去看看</button>
+                    <button class="choice-btn" onclick="makeChoice('stay')">留在原地</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="scene-3" class="scene">
+            <div class="narration-box">
+                <p class="narration-text"></p>
+                <div class="choices">
+                    <button class="choice-btn" onclick="makeChoice('open')">推开那扇门</button>
+                    <button class="choice-btn" onclick="makeChoice('leave')">转身离开</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="scene-ending" class="scene">
+            <div class="narration-box flicker">
+                <p class="ending-title" id="ending-title"></p>
+                <p class="narration-text" id="ending-text"></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 视频设置面板 -->
+    <div class="video-settings" id="video-settings">
+        <h3>🎬 AI 视频设置</h3>
+        <label>火山引擎 API Key：</label>
+        <input type="password" id="api-key-input" placeholder="输入你的 API Key">
+        <label>视频提示词（可选）：</label>
+        <textarea id="video-prompt-input" placeholder="描述你想要的氛围，如：阴森的中式老宅，昏暗的光线，飘动的尘埃">阴森的中式老宅，昏暗的光线，飘动的尘埃，诡异的氛围，中式恐怖风格</textarea>
+        <div class="btn-row">
+            <button onclick="hideVideoSettings()">取消</button>
+            <button class="primary" onclick="applyVideoSettings()">开始</button>
+        </div>
+        <p style="font-size:0.75rem;color:var(--blood);margin-top:1rem;">
+            💡 豆包提供免费额度，可生成氛围视频背景
+        </p>
+    </div>
+    
+    <div class="talisman" id="talisman-1" style="top: 20%; left: 5%;">镇</div>
+    <div class="talisman" id="talisman-2" style="top: 60%; right: 5%;">煞</div>
+    
+    <div class="video-status" id="video-status">
+        <div class="spinner"></div>
+        <span></span>
+    </div>
+    
+    <div class="api-status" id="api-status"></div>
+
+    <script>
+        // ==================== 游戏状态 ====================
+        const gameState = {
+            currentScene: 0,
+            choices: [],
+            typedText: '',
+            fullText: '',
+            isTyping: false,
+            typingSpeed: 50,
+            
+            // API 配置
+            apiKey: '',
+            videoEnabled: false,
+            videoPrompt: '',
+            videoUrl: '',
+            
+            // 视频生成任务
+            videoTaskId: '',
+            videoGenerating: false
+        };
+        
+        // ==================== 剧情内容 ====================
+        const storyContent = {
+            scene1: {
+                text: `十年了。
+
+你终于回到了这座老宅。
+
+推开那扇斑驳的木门，尘封的气息扑面而来。屋内的一切似乎都停留在你离开的那一天——祖母的藤椅、墙上的老照片、还有角落里那座停摆的钟。
+
+你的目光落在桌上。
+
+那里躺着一封信。
+
+信封是红色的，上面用黑墨写着你的名字。
+
+笔迹……是你自己的。`,
+                videoPrompt: '阴森的中式老宅，昏暗的光线，桌子上放着一封红色信封，诡异恐怖氛围'
+            },
+            scene2_examine: {
+                text: `你颤抖着拿起那封信。
+
+信封上的字迹确实是你自己的——你认得那笔锋的起落。
+
+你撕开封口。
+
+里面只有一句话：
+
+「别上楼。」
+
+信纸的背面，隐约有一道暗红色的痕迹，像是干了很久的血迹。
+
+你抬头望向楼梯。
+
+黑暗的楼梯尽头，有一扇门虚掩着。门缝里，似乎有什么在动。`,
+                videoPrompt: '红色信纸，上面写着诡异文字，昏暗的光线，中式恐怖风格'
+            },
+            scene2_ignore: {
+                text: `你把信放回原处。
+
+但你注意到信封上多了一行字——
+
+「你本不该回来。」
+
+这行字，刚才绝对没有。
+
+你的心跳开始加速。身后，似乎有什么在呼吸。
+
+你慢慢转身。
+
+楼梯上，站着一个影子。`,
+                videoPrompt: '诡异的影子站在楼梯上，昏暗的老宅，恐怖氛围'
+            },
+            scene3_upstairs: {
+                text: `你迈上楼梯。
+
+每一步都发出"吱呀"的声响，像是老宅在呻吟。
+
+楼梯尽头的门缝越来越近。
+
+你看见门缝里有一双眼睛——
+
+那是你自己的眼睛。
+
+"进来吧。"门里的人说。
+
+声音，也是你自己的。`,
+                videoPrompt: '黑暗的楼梯，门缝里透出诡异的光，恐怖氛围'
+            },
+            scene3_stay: {
+                text: `你站在原地，不敢动弹。
+
+身后传来一个声音：
+
+"你终于回来了。"
+
+那是你自己的声音。
+
+你慢慢转头——
+
+你看到你自己站在那里，嘴角带着一丝诡异的微笑。
+
+"我等了十年。"他说。
+
+"现在，换你等了。"`,
+                videoPrompt: '黑暗中的人影，诡异的微笑，中式恐怖风格'
+            },
+            ending_open: {
+                title: '结局一 · 自我',
+                text: `你推开了那扇门。
+
+房间里空无一物，只有一面镜子。
+
+镜中，你看到自己的背后站着无数个你。
+
+他们都在微笑。
+
+"欢迎回来。"他们齐声说。
+
+你低下头，发现自己也开始微笑了。
+
+从今天起，你将永远留在这里。
+
+而下一个回来的，会是你。`,
+                videoPrompt: '镜子里有无数个自己，诡异微笑，恐怖超现实画面'
+            },
+            ending_leave: {
+                title: '结局二 · 等待',
+                text: `你转身跑下楼梯。
+
+但楼梯似乎永远不会结束。
+
+你跑了很久，直到力竭倒下。
+
+当你再次睁眼，你发现自己躺在老宅的门口。
+
+桌上那封红信，静静地等着你。
+
+"别上楼。"信上写着。
+
+你看了看自己的手。
+
+你开始写下这封信。`,
+                videoPrompt: '无尽的楼梯，诡异的循环，昏暗的老宅'
+            },
+            ending_talisman: {
+                title: '结局三 · 镇煞',
+                text: `你抓起桌上的符咒，朝那影子贴去。
+
+一声尖叫划破寂静。
+
+影子消散了。
+
+但你知道，这只是暂时的。
+
+老宅里的东西，从来不会被真正消灭。
+
+它们只是在等待。
+
+等待下一个十年。`,
+                videoPrompt: '符咒燃烧，黑烟消散，中式驱邪仪式'
+            }
+        };
+        
+        // ==================== 视频生成 API ====================
+        async function submitVideoTask(prompt) {
+            const statusEl = document.getElementById('video-status');
+            const statusText = statusEl.querySelector('span');
+            
+            try {
+                statusEl.classList.add('generating');
+                statusText.textContent = '提交视频生成任务...';
+                
+                const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/contents/generation/video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${gameState.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'seedance-1-0-lite',
+                        content: [
+                            {
+                                type: 'text',
+                                text: prompt,
+                                role: 'user'
+                            }
+                        ]
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || '视频生成任务提交失败');
+                }
+                
+                const data = await response.json();
+                gameState.videoTaskId = data.id;
+                
+                return data.id;
+            } catch (error) {
+                console.error('视频生成任务提交失败:', error);
+                statusText.textContent = '视频生成失败: ' + error.message;
+                throw error;
+            }
+        }
+        
+        async function pollVideoTask(taskId) {
+            const statusEl = document.getElementById('video-status');
+            const statusText = statusEl.querySelector('span');
+            
+            const maxAttempts = 60; // 最多等待5分钟
+            let attempts = 0;
+            
+            while (attempts < maxAttempts) {
+                try {
+                    statusText.textContent = `生成视频中... (${attempts + 1}/${maxAttempts})`;
+                    
+                    const response = await fetch(`https://ark.cn-beijing.volces.com/api/v3/contents/generation/video/${taskId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${gameState.apiKey}`
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('查询任务状态失败');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'completed' || data.status === 'succeeded') {
+                        statusEl.classList.remove('generating');
+                        statusText.textContent = '视频已加载';
+                        return data.output?.video_url || data.video_url;
+                    } else if (data.status === 'failed' || data.status === 'error') {
+                        throw new Error(data.error || '视频生成失败');
+                    }
+                    
+                    // 等待5秒后再次查询
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    attempts++;
+                } catch (error) {
+                    console.error('查询视频任务失败:', error);
+                    throw error;
+                }
+            }
+            
+            throw new Error('视频生成超时');
+        }
+        
+        async function generateAndPlayVideo(prompt) {
+            if (!gameState.apiKey || !gameState.videoEnabled) {
+                return;
+            }
+            
+            try {
+                gameState.videoGenerating = true;
+                
+                // 提交任务
+                const taskId = await submitVideoTask(prompt);
+                
+                // 轮询获取结果
+                const videoUrl = await pollVideoTask(taskId);
+                
+                // 播放视频
+                const video = document.getElementById('bg-video');
+                video.src = videoUrl;
+                video.style.display = 'block';
+                video.play().catch(e => console.log('视频自动播放失败:', e));
+                
+                gameState.videoUrl = videoUrl;
+            } catch (error) {
+                console.error('视频生成失败:', error);
+                document.getElementById('video-status').querySelector('span').textContent = 
+                    '视频生成失败，使用静态背景';
+            } finally {
+                gameState.videoGenerating = false;
+                document.getElementById('video-status').classList.remove('generating');
+            }
+        }
+        
+        // ==================== 文本生成 API ====================
+        async function callDoubaoTextAPI(prompt) {
+            if (!gameState.apiKey) {
+                return null;
+            }
+            
+            try {
+                const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${gameState.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'doubao-pro-4k',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: '你是一个中式民俗恐怖故事的旁白，用简短、压抑、诡异的语言描述场景。'
+                            },
+                            {
+                                role: 'user',
+                                content: prompt
+                            }
+                        ],
+                        max_tokens: 100,
+                        temperature: 0.8
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('API请求失败');
+                }
+                
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                console.error('豆包文本API调用失败:', error);
+                return null;
+            }
+        }
+        
+        // ==================== 打字机效果 ====================
+        function typeText(element, text, callback) {
+            gameState.isTyping = true;
+            gameState.fullText = text;
+            gameState.typedText = '';
+            element.innerHTML = '';
+            
+            let i = 0;
+            const cursor = document.createElement('span');
+            cursor.className = 'cursor';
+            
+            function type() {
+                if (i < text.length) {
+                    const speed = gameState.fastTyping ? 10 : gameState.typingSpeed;
+                    
+                    gameState.typedText += text[i];
+                    element.innerHTML = gameState.typedText;
+                    element.appendChild(cursor);
+                    i++;
+                    
+                    const randomPause = Math.random() * 30;
+                    setTimeout(type, speed + randomPause);
+                } else {
+                    gameState.isTyping = false;
+                    cursor.style.display = 'none';
+                    if (callback) callback();
+                }
+            }
+            
+            type();
+        }
+        
+        // ==================== 场景切换 ====================
+        function switchScene(sceneId) {
+            document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+            const scene = document.getElementById(sceneId);
+            if (scene) {
+                scene.classList.add('active');
+            }
+        }
+        
+        // ==================== 游戏流程 ====================
+        function showVideoSettings() {
+            document.getElementById('video-settings').classList.add('active');
+        }
+        
+        function hideVideoSettings() {
+            document.getElementById('video-settings').classList.remove('active');
+        }
+        
+        async function applyVideoSettings() {
+            const apiKey = document.getElementById('api-key-input').value.trim();
+            const videoPrompt = document.getElementById('video-prompt-input').value.trim();
+            
+            if (!apiKey) {
+                alert('请输入 API Key');
+                return;
+            }
+            
+            gameState.apiKey = apiKey;
+            gameState.videoPrompt = videoPrompt || '阴森的中式老宅，昏暗的光线，飘动的尘埃，诡异的氛围，中式恐怖风格';
+            gameState.videoEnabled = true;
+            
+            localStorage.setItem('doubao_api_key', apiKey);
+            
+            hideVideoSettings();
+            
+            document.getElementById('api-status').textContent = '🎬 视频模式已启用';
+            document.getElementById('video-status').querySelector('span').textContent = '准备生成视频...';
+            
+            // 开始生成开场视频
+            startGame();
+        }
+        
+        async function startGame() {
+            gameState.currentScene = 1;
+            switchScene('scene-1');
+            
+            // 如果启用了视频，生成开场氛围视频
+            if (gameState.videoEnabled && gameState.apiKey) {
+                generateAndPlayVideo(gameState.videoPrompt);
+            }
+            
+            const textEl = document.querySelector('#scene-1 .narration-text');
+            
+            // 如果有 API Key，尝试生成额外文本
+            if (gameState.apiKey) {
+                const aiText = await callDoubaoTextAPI(storyContent.scene1.videoPrompt);
+                if (aiText) {
+                    typeText(textEl, storyContent.scene1.text + '\n\n【' + aiText + '】', () => {
+                        document.querySelector('#scene-1 .choices').classList.add('visible');
+                    });
+                } else {
+                    typeText(textEl, storyContent.scene1.text, () => {
+                        document.querySelector('#scene-1 .choices').classList.add('visible');
+                    });
+                }
+            } else {
+                typeText(textEl, storyContent.scene1.text, () => {
+                    document.querySelector('#scene-1 .choices').classList.add('visible');
+                });
+            }
+            
+            setTimeout(() => {
+                document.querySelectorAll('.talisman').forEach(t => t.style.opacity = '1');
+            }, 2000);
+        }
+        
+        function makeChoice(choice) {
+            gameState.choices.push(choice);
+            
+            switch(gameState.currentScene) {
+                case 1:
+                    handleScene1Choice(choice);
+                    break;
+                case 2:
+                    handleScene2Choice(choice);
+                    break;
+                case 3:
+                    handleScene3Choice(choice);
+                    break;
+            }
+        }
+        
+        async function handleScene1Choice(choice) {
+            gameState.currentScene = 2;
+            switchScene('scene-2');
+            
+            const textEl = document.querySelector('#scene-2 .narration-text');
+            const content = choice === 'examine' ? storyContent.scene2_examine : storyContent.scene2_ignore;
+            
+            // 生成场景视频
+            if (gameState.videoEnabled) {
+                generateAndPlayVideo(content.videoPrompt);
+            }
+            
+            typeText(textEl, content.text, () => {
+                document.querySelector('#scene-2 .choices').classList.add('visible');
+            });
+        }
+        
+        async function handleScene2Choice(choice) {
+            gameState.currentScene = 3;
+            switchScene('scene-3');
+            
+            const textEl = document.querySelector('#scene-3 .narration-text');
+            const content = choice === 'upstairs' ? storyContent.scene3_upstairs : storyContent.scene3_stay;
+            
+            // 生成场景视频
+            if (gameState.videoEnabled) {
+                generateAndPlayVideo(content.videoPrompt);
+            }
+            
+            typeText(textEl, content.text, () => {
+                document.querySelector('#scene-3 .choices').classList.add('visible');
+            });
+        }
+        
+        async function handleScene3Choice(choice) {
+            let ending;
+            
+            if (choice === 'open') {
+                ending = storyContent.ending_open;
+            } else if (choice === 'leave') {
+                ending = storyContent.ending_leave;
+            } else {
+                ending = storyContent.ending_talisman;
+            }
+            
+            switchScene('scene-ending');
+            
+            // 生成结局视频
+            if (gameState.videoEnabled) {
+                generateAndPlayVideo(ending.videoPrompt);
+            }
+            
+            document.getElementById('ending-title').textContent = ending.title;
+            const textEl = document.getElementById('ending-text');
+            
+            typeText(textEl, ending.text);
+            
+            setTimeout(() => {
+                document.body.style.transition = 'filter 3s ease';
+                document.body.style.filter = 'sepia(0.3) contrast(0.9)';
+            }, 2000);
+        }
+        
+        // ==================== 交互事件 ====================
+        document.addEventListener('click', (e) => {
+            if (gameState.isTyping && !e.target.closest('button') && !e.target.closest('.video-settings')) {
+                gameState.fastTyping = true;
+            }
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                if (gameState.isTyping) {
+                    gameState.fastTyping = true;
+                }
+            }
+        });
+        
+        // ==================== 初始化 ====================
+        function init() {
+            const savedKey = localStorage.getItem('doubao_api_key');
+            if (savedKey) {
+                gameState.apiKey = savedKey;
+                document.getElementById('api-key-input').value = savedKey;
+                document.getElementById('api-status').textContent = '💡 可启用视频模式';
+            }
+        }
+        
+        init();
+    </script>
+</body>
+</html>
